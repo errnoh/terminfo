@@ -9,7 +9,7 @@ import (
 
 
 func main() {
-	ti, err := terminfo.Get()
+	ti, err := terminfo.Get(false)
 	if err != nil {
 		log.Fatal(err)
 	}

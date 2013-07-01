@@ -5,7 +5,15 @@ import (
 )
 
 func TestInfocmp(t *testing.T) {
-	out, err := infocmp("")
+	out, err := infocmp("", false)
+	t.Log(string(out))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestInfocmpTermcap(t *testing.T) {
+	out, err := infocmp("", true)
 	t.Log(string(out))
 	if err != nil {
 		t.Fatal(err)
@@ -13,7 +21,15 @@ func TestInfocmp(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	ti, err := Get()
+	ti, err := Get(false)
+	t.Log(ti)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetTermcap(t *testing.T) {
+	ti, err := Get(true)
 	t.Log(ti)
 	if err != nil {
 		t.Fatal(err)
@@ -21,7 +37,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestTerm(t *testing.T) {
-	ti, err := Term("xterm")
+	ti, err := Term("xterm", false)
 	t.Log(ti)
 	if err != nil {
 		t.Fatal(err)

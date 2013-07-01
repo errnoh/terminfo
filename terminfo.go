@@ -15,27 +15,20 @@ import (
 	"strconv"
 )
 
-// Get returns Terminfo of current terminal
-func Get() (*Terminfo, error) {
-	out, err := infocmp("")
-	if err != nil {
-		return nil, err
-	}
-
-	b := bytes.NewBuffer(out)
-	return parse(b)
-
+// Get returns Terminfo of current terminal. Set termcap if you want to use termcap format instead of terminfo (default).
+func Get(termcap bool) (*Terminfo, error) {
+	return Term("", termcap)
 }
 
-// Term returns Terminfo of terminal 'term'.
-func Term(term string) (*Terminfo, error) {
-	out, err := infocmp(term)
+// Term returns Terminfo of terminal term. Set termcap if you want to use termcap format instead of terminfo (default).
+func Term(term string, termcap bool) (*Terminfo, error) {
+	out, err := infocmp(term, termcap)
 	if err != nil {
 		return nil, err
 	}
 
 	b := bytes.NewBuffer(out)
-	return parse(b)
+	return parse(b, termcap)
 }
 
 type Terminfo struct {
@@ -45,14 +38,21 @@ type Terminfo struct {
 	Boolean     map[string]bool
 }
 
-func infocmp(s string) ([]byte, error) {
+func infocmp(s string, termcap bool) ([]byte, error) {
+	args := []string{"-1"}
+
 	if s != "" {
-		return exec.Command("infocmp", "-1", s).Output()
+		args = append(args, s)
 	}
-	return exec.Command("infocmp", "-1").Output()
+
+	if termcap {
+		args = append(args, "-C")
+	}
+
+	return exec.Command("infocmp", args...).Output()
 }
 
-func parse(b *bytes.Buffer) (ti *Terminfo, err error) {
+func parse(b *bytes.Buffer, termcap bool) (ti *Terminfo, err error) {
 	var (
 		line []byte
 		pair [][]byte
@@ -77,7 +77,12 @@ func parse(b *bytes.Buffer) (ti *Terminfo, err error) {
 			continue
 		}
 		line = bytes.TrimSpace(line)
-		line = bytes.TrimSuffix(line, []byte{','})
+		if termcap {
+			line = bytes.TrimSuffix(line, []byte(":\\"))
+			line = bytes.TrimPrefix(line, []byte{':'})
+		} else {
+			line = bytes.TrimSuffix(line, []byte{','})
+		}
 		if ti.Description == "" {
 			ti.Description = string(line)
 			continue
